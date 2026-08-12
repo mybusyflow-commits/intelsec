@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+.font-display {
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.font-mono,
+code,
+kbd,
+samp,
+pre {
+  font-family: 'JetBrains Mono', monospace;
+}
