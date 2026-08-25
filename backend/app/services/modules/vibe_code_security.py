@@ -566,6 +566,22 @@ VULNERABILITY_PATTERNS = {
 }
 
 
+def _map_code_scan_findings(findings: list) -> list:
+    mapped = []
+    for f in findings:
+        mapped.append({
+            "category": f.get("category", "unknown"),
+            "type": f.get("id", "issue"),
+            "title": f.get("title", "Issue") + (f" (line {f['line']})" if f.get("line") else ""),
+            "description": f.get("remediation", ""),
+            "severity": f.get("severity", "low"),
+            "cwe": f.get("cwe", ""),
+            "remediation": f.get("remediation", ""),
+            "line": f.get("line"),
+        })
+    return mapped
+
+
 @register_feature(
     key="vibe_code_security",
     name="Vibe Code Security",
@@ -583,9 +599,34 @@ def vibe_code_security(payload: dict) -> dict:
 
     if target_type == "url" or url:
         vulnerabilities.extend(_scan_url_security(url or target))
+        try:
+            from app.services.code_analyzer import run_code_scan
+
+            deep = run_code_scan(target_type="url", target=url or target)
+            vulnerabilities.extend(_map_code_scan_findings(deep["findings"]))
+        except Exception:
+            pass
 
     if target_type in ("code", "github", "file") and code:
         vulnerabilities.extend(_scan_code_security(code))
+        try:
+            from app.services.code_analyzer import run_code_scan
+
+            deep = run_code_scan(target_type="code", code=code)
+            vulnerabilities.extend(_map_code_scan_findings(deep["findings"]))
+        except Exception:
+            pass
+
+    # de-duplicate by title so the same URL/code finding isn't reported twice
+    seen_titles = set()
+    deduped = []
+    for v in vulnerabilities:
+        t = v.get("title")
+        if t in seen_titles:
+            continue
+        seen_titles.add(t)
+        deduped.append(v)
+    vulnerabilities = deduped
 
     for vuln in vulnerabilities:
         severity_score = {"critical": 0.9, "high": 0.6, "medium": 0.3, "low": 0.1}.get(vuln.get("severity", "low"), 0.1)
@@ -607,7 +648,14 @@ def vibe_code_security(payload: dict) -> dict:
         "target": target or url,
         "vulnerabilities_found": len(vulnerabilities),
         "vulnerabilities": vulnerabilities,
+        "findings": [
+            f"[{v.get('severity', 'low')}] {v.get('title', 'Issue')}"
+            + (f" (line {v['line']})" if v.get("line") else "")
+            + f" — {v.get('remediation', '')}"
+            for v in vulnerabilities
+        ],
         "risk_score": round(risk_score, 3),
+        "verdict": "block" if risk_score >= 0.6 else "flag" if risk_score >= 0.3 else "allow",
         "severity": severity,
         "categories_affected": list(set(v.get("category", "unknown") for v in vulnerabilities)),
         "critical_count": sum(1 for v in vulnerabilities if v.get("severity") == "critical"),

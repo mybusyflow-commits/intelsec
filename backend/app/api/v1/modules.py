@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.services.feature_registry import FEATURE_REGISTRY, get_customer_features, check_entitlement
 from app.api.v1.threats import add_threat_event
+from app.core.security import require_user
 
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(require_user)])
 async def list_modules():
     features = []
     for key, feature in FEATURE_REGISTRY.items():

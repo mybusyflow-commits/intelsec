@@ -1,5 +1,11 @@
 const API_BASE = "/api/v1";
 
+// Optional session-token provider (unused in open mode).
+let authTokenGetter: (() => Promise<string | null>) | null = null;
+export function setAuthTokenGetter(fn: (() => Promise<string | null>) | null) {
+  authTokenGetter = fn;
+}
+
 export interface Stats {
   total_scans: number;
   active_threats: number;
@@ -30,7 +36,18 @@ export interface ModuleInfo {
 }
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, init);
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (authTokenGetter) {
+    try {
+      const token = await authTokenGetter();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    } catch {
+      // No session yet — leave header off; server decides if auth is required.
+    }
+  }
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
   if (!res.ok) throw new Error(`API ${res.status} ${path}`);
   return res.json() as Promise<T>;
 }
@@ -69,5 +86,47 @@ export const api = {
   async getModules(): Promise<ModuleInfo[]> {
     const r = await req<{ modules: ModuleInfo[] }>("/modules");
     return r.modules;
+  },
+
+  async getScanHistory(): Promise<any[]> {
+    const r = await req<{ scans: any[] }>("/scans/history");
+    return r.scans ?? [];
+  },
+
+  async runModuleScan(moduleId: string, payload: any): Promise<any> {
+    return req<any>(`/modules/${moduleId}/scan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async runScan(payload: { text?: string; target?: string; modules?: string[] }): Promise<any> {
+    return req<any>("/scans/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async reason(prompt: string, model: string = "hy3(free)"): Promise<string> {
+    const r = await req<{ reasoning: string }>("/reasoning", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, model }),
+    });
+    return r.reasoning;
+  },
+
+  async realtimeIngest(payload: any): Promise<any> {
+    return req<any>("/realtime/ingest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async realtimeFeed(): Promise<any> {
+    return req<any>("/realtime/feed");
   },
 };

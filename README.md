@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-1. Copy `.env.example` to `.env` and fill in your Clerk keys
+1. Set `VITE_CLERK_PUBLISHABLE_KEY` (frontend `.env`) and `CLERK_SECRET_KEY` (backend `.env`) from your Clerk instance. Without them the app runs in open mode.
 2. Run `docker-compose up --build`
 3. Frontend: http://localhost:5173
 4. Backend API: http://localhost:8000

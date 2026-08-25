@@ -12,7 +12,7 @@ router = APIRouter()
 async def get_current_user():
     return {
         "id": "usr-admin-01",
-        "email": "security@intellirity.io",
+        "email": "security@intellirity.com",
         "full_name": "Intellirity Admin",
         "role": "Security Officer",
         "organization": "Enterprise Defense Corp",

@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,7 +28,14 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,6 +69,30 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "intellirity"}
+
+
+@app.get("/favicon.png")
+async def favicon_png():
+    p = os.path.join(frontend_dir, "favicon.png")
+    if os.path.exists(p):
+        return FileResponse(p, media_type="image/png")
+    raise HTTPException(status_code=404, detail="favicon not found")
+
+
+@app.get("/favicon.ico")
+async def favicon_ico():
+    p = os.path.join(frontend_dir, "favicon.png")
+    if os.path.exists(p):
+        return FileResponse(p, media_type="image/png")
+    raise HTTPException(status_code=404, detail="favicon not found")
+
+
+@app.get("/logo.png")
+async def logo_png():
+    p = os.path.join(frontend_dir, "logo.png")
+    if os.path.exists(p):
+        return FileResponse(p, media_type="image/png")
+    raise HTTPException(status_code=404, detail="logo not found")
 
 
 @app.get("/app/{path:path}")

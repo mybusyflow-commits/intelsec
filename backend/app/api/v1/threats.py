@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
+from app.core.security import require_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.schemas.schemas import ThreatDetectionResponse
@@ -87,7 +88,7 @@ def get_threats_store() -> list[dict]:
     return _memory_threats
 
 
-@router.get("/", response_model=list[ThreatDetectionResponse])
+@router.get("/", response_model=list[ThreatDetectionResponse], dependencies=[Depends(require_user)])
 async def list_threats(
     status: Optional[str] = None,
     severity: Optional[str] = None,

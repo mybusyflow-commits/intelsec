@@ -8,9 +8,11 @@ class Settings(BaseSettings):
     CLERK_PUBLISHABLE_KEY: str = ""
     ENVIRONMENT: str = "development"
     API_V1_PREFIX: str = "/api/v1"
+    OPENCODEZEN_API_KEY: str = ""
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()

@@ -1,11 +1,12 @@
 import asyncio
 import random
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.api.v1.threats import add_threat_event, get_threats_store
 from app.api.v1.scans import get_scans_store
+from app.core.security import require_user
 
 router = APIRouter()
 
@@ -84,7 +85,7 @@ async def system_status():
 
 # ─── Live summary / KPIs ──────────────────────────────────────────────────────
 
-@router.get("/summary")
+@router.get("/summary", dependencies=[Depends(require_user)])
 async def system_summary():
     threats = get_threats_store()
     scans = get_scans_store()
@@ -92,23 +93,30 @@ async def system_summary():
     active = [t for t in threats if not t["is_resolved"]]
     resolved = [t for t in threats if t["is_resolved"]]
 
-    # Score based on the most recent window so it stays healthy + responsive in a live demo
+    # Score derived from the most recent window of threat activity (real stored data).
     recent = sorted(threats, key=lambda t: t["created_at"], reverse=True)[:30]
     recent_high = sum(1 for t in recent if t["severity"] == "high")
     recent_medium = sum(1 for t in recent if t["severity"] == "medium")
+    recent_low = sum(1 for t in recent if t["severity"] == "low")
 
-    score = max(82, round(96 - recent_high * 1.2 - recent_medium * 0.3, 1))
+    raw_score = 100.0 - (recent_high * 1.5) - (recent_medium * 0.5) - (recent_low * 0.2)
+    score = round(max(0.0, min(100.0, raw_score)), 1)
 
     risk_scores = [s.get("risk_score", 0.0) for s in scans if s.get("risk_score") is not None]
     avg_risk = round(sum(risk_scores) / len(risk_scores), 3) if risk_scores else 0.0
+
+    # Models actually monitored = distinct model sources observed in the live threat feed.
+    models_monitored = len({t.get("source") for t in threats if t.get("source")})
+
+    compliance_score = round(max(0.0, min(100.0, score - 2.0)), 1)
 
     return {
         "security_score": score,
         "threats_blocked": len(resolved),
         "threats_active": len(active),
         "threats_high": sum(1 for t in active if t["severity"] == "high"),
-        "models_monitored": 48,
-        "compliance_score": max(88, round(score - 1, 1)),
+        "models_monitored": models_monitored,
+        "compliance_score": compliance_score,
         "total_scans": len(scans),
         "average_risk_score": avg_risk,
         "timestamp": datetime.now(timezone.utc).isoformat(),

@@ -15,7 +15,7 @@ pydantic = "^2.7.0"
 pydantic-settings = "^2.3.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 httpx = "^0.27.0"
-clerk-backend-api = "^1.3.0"
+# clerk-backend-api removed — open mode (no Clerk)
 python-multipart = "^0.0.9"
 
 [tool.poetry.group.dev.dependencies]

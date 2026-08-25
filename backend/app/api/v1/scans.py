@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException
+from app.core.security import require_user
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.schemas.schemas import SecurityScanCreate, SecurityScanResponse
@@ -45,6 +46,24 @@ _memory_scans: list[dict] = list(_INITIAL_SCANS)
 
 def get_scans_store() -> list[dict]:
     return _memory_scans
+
+
+@router.get("/history", dependencies=[Depends(require_user)])
+async def scan_history():
+    """Return in-memory scan history produced by the multi-module sweep."""
+    return {"scans": _memory_scans}
+
+
+@router.post("/code-security")
+async def code_security_scan(payload: dict):
+    """Run the Vibe Code Security static-analysis engine directly."""
+    from app.services.code_analyzer import run_code_scan
+
+    return run_code_scan(
+        target_type=payload.get("target_type", "code"),
+        target=payload.get("target", ""),
+        code=payload.get("code", ""),
+    )
 
 
 @router.post("/", response_model=SecurityScanResponse)
@@ -128,12 +147,12 @@ async def run_full_scan(payload: dict, db: AsyncSession = Depends(get_db)):
     }
 
 
-@router.get("/", response_model=list[SecurityScanResponse])
+@router.get("/", response_model=list[SecurityScanResponse], dependencies=[Depends(require_user)])
 async def list_scans(db: AsyncSession = Depends(get_db)):
     return [SecurityScanResponse(**s) for s in _memory_scans]
 
 
-@router.get("/{scan_id}", response_model=SecurityScanResponse)
+@router.get("/{scan_id}", response_model=SecurityScanResponse, dependencies=[Depends(require_user)])
 async def get_scan(scan_id: str, db: AsyncSession = Depends(get_db)):
     for s in _memory_scans:
         if s["id"] == scan_id:
