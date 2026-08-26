@@ -2748,13 +2748,16 @@ export function AppShell({ auth, openMode = false }: { auth: AuthState; openMode
     setView("dashboard");
   };
 
+  // Entry point for any "Dashboard" button: open it when signed in,
+  // otherwise force the Clerk sign-in screen first.
+  const openDashboard = () => {
+    if (auth.isSignedIn) setView("dashboard");
+    else setView("auth");
+  };
+
   useEffect(() => {
     if (view === "auth" && auth.isSignedIn) setView("dashboard");
   }, [view, auth.isSignedIn]);
-
-  useEffect(() => {
-    if (auth.isLoaded && auth.isSignedIn) setView("dashboard");
-  }, [auth.isLoaded, auth.isSignedIn]);
 
   if (view === "dashboard") {
     return (
@@ -2784,7 +2787,7 @@ export function AppShell({ auth, openMode = false }: { auth: AuthState; openMode
         }}
       />
       <Nav
-        onDashboard={goDashboard}
+        onDashboard={openDashboard}
         onSignup={() => setView("auth")}
         onContact={() => setShowContact(true)}
         isSignedIn={auth.isSignedIn}
@@ -2795,7 +2798,7 @@ export function AppShell({ auth, openMode = false }: { auth: AuthState; openMode
       />
 
       <HeroSection
-        onDashboard={goDashboard}
+        onDashboard={openDashboard}
         onSignup={() => setView("auth")}
       />
 
@@ -2807,7 +2810,7 @@ export function AppShell({ auth, openMode = false }: { auth: AuthState; openMode
       />
       <VideoSection />
       <CTASection
-        onDashboard={goDashboard}
+        onDashboard={openDashboard}
         onSignup={() => setView("auth")}
       />
       <Footer
