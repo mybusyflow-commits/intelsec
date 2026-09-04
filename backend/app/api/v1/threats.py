@@ -88,11 +88,11 @@ def get_threats_store() -> list[dict]:
     return _memory_threats
 
 
-@router.get("/", response_model=list[ThreatDetectionResponse], dependencies=[Depends(require_user)])
+@router.get("")
+@router.get("/", response_model=list[ThreatDetectionResponse])
 async def list_threats(
     status: Optional[str] = None,
     severity: Optional[str] = None,
-    db: AsyncSession = Depends(get_db),
 ):
     results = _memory_threats
     if status == "active":
@@ -107,7 +107,7 @@ async def list_threats(
 
 
 @router.get("/{threat_id}", response_model=ThreatDetectionResponse)
-async def get_threat(threat_id: str, db: AsyncSession = Depends(get_db)):
+async def get_threat(threat_id: str):
     for t in _memory_threats:
         if t["id"] == threat_id:
             return ThreatDetectionResponse(**t)
@@ -115,7 +115,7 @@ async def get_threat(threat_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/{threat_id}/resolve", response_model=ThreatDetectionResponse)
-async def resolve_threat(threat_id: str, db: AsyncSession = Depends(get_db)):
+async def resolve_threat(threat_id: str):
     for t in _memory_threats:
         if t["id"] == threat_id:
             t["is_resolved"] = True

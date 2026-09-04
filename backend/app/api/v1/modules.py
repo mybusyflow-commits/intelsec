@@ -6,6 +6,7 @@ from app.core.security import require_user
 router = APIRouter()
 
 
+@router.get("", dependencies=[Depends(require_user)])
 @router.get("/", dependencies=[Depends(require_user)])
 async def list_modules():
     features = []

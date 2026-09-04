@@ -69,7 +69,6 @@ async def code_security_scan(payload: dict):
 @router.post("/", response_model=SecurityScanResponse)
 async def create_scan(
     scan: SecurityScanCreate,
-    db: AsyncSession = Depends(get_db),
 ):
     now = datetime.now(timezone.utc)
     new_scan = {
@@ -86,7 +85,7 @@ async def create_scan(
 
 
 @router.post("/run")
-async def run_full_scan(payload: dict, db: AsyncSession = Depends(get_db)):
+async def run_full_scan(payload: dict):
     """Run an automated sweep across multiple security modules."""
     text = payload.get("text", "")
     target = payload.get("target", "All AI Models")
@@ -97,11 +96,23 @@ async def run_full_scan(payload: dict, db: AsyncSession = Depends(get_db)):
     max_risk = 0.0
     all_findings = []
 
+    # Build a payload every module can use. The code-security module needs a
+    # concrete target/code + target_type; otherwise it fabricates an empty-URL
+    # scan and always reports a false BLOCK.
+    is_url = (target or "").startswith(("http://", "https://"))
+    scan_payload = {
+        "text": text,
+        "direction": "input",
+        "target": target if is_url else "",
+        "code": text if not is_url else "",
+        "target_type": "url" if is_url else "code",
+    }
+
     for mod_key in selected_modules:
         if mod_key in FEATURE_REGISTRY:
             func = FEATURE_REGISTRY[mod_key]["function"]
             try:
-                res = func({"text": text, "direction": "input"})
+                res = func(scan_payload)
                 results[mod_key] = res
                 risk = res.get("risk_score", 0.0)
                 if risk > max_risk:
@@ -148,12 +159,12 @@ async def run_full_scan(payload: dict, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/", response_model=list[SecurityScanResponse], dependencies=[Depends(require_user)])
-async def list_scans(db: AsyncSession = Depends(get_db)):
+async def list_scans():
     return [SecurityScanResponse(**s) for s in _memory_scans]
 
 
 @router.get("/{scan_id}", response_model=SecurityScanResponse, dependencies=[Depends(require_user)])
-async def get_scan(scan_id: str, db: AsyncSession = Depends(get_db)):
+async def get_scan(scan_id: str):
     for s in _memory_scans:
         if s["id"] == scan_id:
             return SecurityScanResponse(**s)

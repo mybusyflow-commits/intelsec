@@ -6,7 +6,6 @@ from pydantic import BaseModel
 
 from app.api.v1.threats import add_threat_event, get_threats_store
 from app.api.v1.scans import get_scans_store
-from app.core.security import require_user
 
 router = APIRouter()
 
@@ -85,7 +84,7 @@ async def system_status():
 
 # ─── Live summary / KPIs ──────────────────────────────────────────────────────
 
-@router.get("/summary", dependencies=[Depends(require_user)])
+@router.get("/summary")
 async def system_summary():
     threats = get_threats_store()
     scans = get_scans_store()

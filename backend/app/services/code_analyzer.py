@@ -155,6 +155,14 @@ def _is_safe_url(target: str) -> tuple[bool, str]:
     return True, ""
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse to follow redirects so an SSRF guard can't be bypassed via a
+    redirect to an internal/metadata address."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def _scan_url(url: str) -> list[dict]:
     findings: list[dict] = []
     ok, why = _is_safe_url(url)
@@ -177,10 +185,12 @@ def _scan_url(url: str) -> list[dict]:
             "cwe": "CWE-601", "category": "transport", "line": 0,
             "snippet": url, "remediation": "Validate redirect targets against an allowlist.",
         })
-    # Probe live headers (best-effort, short timeout).
+    # Probe live headers (best-effort, short timeout). Redirects are NOT followed
+    # — following them could route the probe to an internal/metadata address.
     try:
+        opener = urllib.request.build_opener(_NoRedirect())
         req = urllib.request.Request(url, method="GET", headers={"User-Agent": "Intellirity-Security/1.0"})
-        with urllib.request.urlopen(req, timeout=6) as resp:
+        with opener.open(req, timeout=6) as resp:
             headers = {k.lower(): v for k, v in resp.getheaders()}
         for header, label, sev in [
             ("strict-transport-security", "HSTS", "medium"),

@@ -589,10 +589,17 @@ def _map_code_scan_findings(findings: list) -> list:
     tier="professional",
 )
 def vibe_code_security(payload: dict) -> dict:
-    target_type = payload.get("target_type", "url")
     target = payload.get("target", "")
     code = payload.get("code", "")
     url = payload.get("url", "")
+    if payload.get("target_type"):
+        target_type = payload["target_type"]
+    elif url or target:
+        target_type = "url"
+    else:
+        # Nothing actionable supplied — default to code scanning rather than
+        # fabricating an empty-URL scan that would always flag a false BLOCK.
+        target_type = "code"
 
     vulnerabilities = []
     risk_score = 0.0
