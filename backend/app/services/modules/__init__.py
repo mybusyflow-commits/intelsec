@@ -10,4 +10,5 @@ from app.services.modules import (
     advanced_threat_intel,
     behavioral_mcp,
     dlp_dow,
+    content_moderation,
 )

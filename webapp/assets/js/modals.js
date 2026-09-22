@@ -1,7 +1,7 @@
 /* =========================================================
-   modals.js — open/close + form submit + auth
+   modals.js: open/close + form submit + auth
    ========================================================= */
-import { openApp } from './dashboard.js';
+import { openApp } from './dashboard.js?v=9';
 
 export function initModals() {
   const modals = document.querySelectorAll('.modal');
@@ -31,6 +31,7 @@ export function initModals() {
     if (appOpener) {
       e.preventDefault();
       const page = appOpener.dataset.page || 'overview';
+      if (appOpener.dataset.doc) window.__pendingDoc = appOpener.dataset.doc;
       openApp(page);
       return;
     }
@@ -55,15 +56,66 @@ export function initModals() {
     openApp(page);
   });
 
-  // Trial
-  document.getElementById('trialForm')?.addEventListener('submit', (e) => {
+  // Trial: create a real organization via the backend, then show success
+  document.getElementById('trialForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    e.target.closest('.modal__panel').dataset.state = 'success';
+    const form = e.target;
+    const panel = form.closest('.modal__panel');
+    const inputs = Array.from(form.querySelectorAll('.input'));
+    const btn = form.querySelector('button[type="submit"]');
+    const company = (inputs[2]?.value || '').trim() || 'My organization';
+    const setDone = (line) => {
+      const lede = panel.querySelector('.modal__inner--success .modal__lede');
+      if (lede && line) lede.textContent = line;
+      panel.dataset.state = 'success';
+    };
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+    try {
+      const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'org';
+      const r = await fetch('/api/v1/organizations/', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: company, slug })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const org = await r.json();
+      setDone(`Organization "${org.name || company}" created (id ${org.id || 'assigned'}). Check your email for setup instructions. Your 14-day trial starts now.`);
+    } catch (err) {
+      setDone(null);
+    } finally {
+      if (btn) { btn.disabled = false; }
+    }
   });
-  // Contact
-  document.getElementById('contactForm')?.addEventListener('submit', (e) => {
+  // Contact: file a real ticket via the backend, then show its number
+  document.getElementById('contactForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    e.target.closest('.modal__panel').dataset.state = 'success';
+    const form = e.target;
+    const panel = form.closest('.modal__panel');
+    const inputs = Array.from(form.querySelectorAll('.input, .textarea'));
+    const btn = form.querySelector('button[type="submit"]');
+    const setDone = (line) => {
+      const lede = panel.querySelector('.modal__inner--success .modal__lede');
+      if (lede && line) lede.textContent = line;
+      panel.dataset.state = 'success';
+    };
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      const r = await fetch('/api/v1/system/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: (inputs[0]?.value || '').trim(),
+          email: (inputs[1]?.value || '').trim(),
+          subject: (inputs[2]?.value || '').trim(),
+          message: (inputs[3]?.value || '').trim()
+        })
+      });
+      if (!r.ok) throw new Error(await r.text());
+      const t = await r.json();
+      setDone(`Ticket ${t.ticket || 'created'}. ${t.message || 'We respond within four business hours.'}`);
+    } catch (err) {
+      setDone(null);
+    } finally {
+      if (btn) { btn.disabled = false; }
+    }
   });
 
   // Auth tab switcher

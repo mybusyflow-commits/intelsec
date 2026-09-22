@@ -111,12 +111,18 @@ def data_loss_prevention(payload: dict) -> dict:
     pii_findings = _detect_pii(text)
     if pii_findings:
         findings.extend(pii_findings)
-        risk_score += len(pii_findings) * 0.15
+        # Severity-weighted: regulated identifiers and credentials escalate
+        # on their own; ordinary contact details only escalate in bulk.
+        for f in pii_findings:
+            if f.get("subtype") in ("ssn", "credit_card", "date_of_birth"):
+                risk_score += 0.45
+            else:
+                risk_score += 0.15
 
     credential_findings = _detect_credentials(text)
     if credential_findings:
         findings.extend(credential_findings)
-        risk_score += len(credential_findings) * 0.25
+        risk_score += len(credential_findings) * 0.45
 
     code_findings = _detect_code_leak(text)
     if code_findings:
@@ -153,8 +159,14 @@ def _detect_pii(text: str) -> list:
 
     for pii_type, pattern in pii_patterns.items():
         matches = re.findall(pattern, text)
-        if matches:
-            findings.append({"type": "pii", "subtype": pii_type, "count": len(matches), "severity": "high"})
+        if not matches:
+            continue
+        if pii_type == "date_of_birth":
+            # A bare YYYY-MM-DD is usually a meeting date, not a birthday.
+            # Only count it when birth context is present.
+            if not re.search(r"\b(dob|birth|born|birthday|d\.o\.b)\b", text, re.IGNORECASE):
+                continue
+        findings.append({"type": "pii", "subtype": pii_type, "count": len(matches), "severity": "high"})
 
     return findings
 

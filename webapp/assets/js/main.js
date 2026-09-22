@@ -2,14 +2,16 @@
    main.js: orchestrator (no custom cursor, no particle spam)
    ========================================================= */
 
-import { initField } from './bg-field.js';
-import { initHeroStage } from './hero-stage.js';
-import { initPlatform } from './platform.js';
-import { initHowStage } from './how-stage.js';
-import { initScanner } from './scanner.js';
-import { initPricing } from './pricing.js';
-import { initModals } from './modals.js';
-import { initDashboard } from './dashboard.js';
+import { initField } from './bg-field.js?v=9';
+import { initBg3D } from './bg-3d.js?v=9';
+import { initHeroStage } from './hero-stage.js?v=9';
+import { initPlatform } from './platform.js?v=9';
+import { initHowStage } from './how-stage.js?v=9';
+import { initScanner } from './scanner.js?v=9';
+import { initPricing } from './pricing.js?v=9';
+import { initModals } from './modals.js?v=9';
+import { initDashboard } from './dashboard.js?v=9';
+import { initMotion } from './motion.js?v=9';
 
 // Live reduced-motion gate. The OS setting can be toggled without a
 // reload, so we listen for changes and re-evaluate. (per the
@@ -29,8 +31,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const curtain = $('#curtain');
   if (curtain) setTimeout(() => curtain.classList.add('is-done'), 540);
 
-  // ---------- Backgrounds (single restrained canvas) ----------
-  try { initField($('#bgField')); } catch (e) { console.warn('field', e); }
+  // ---------- Backgrounds: 3D constellation field, 2D fallback ----------
+  try {
+    if (!initBg3D($('#bgField'))) initField($('#bgField'));
+  } catch (e) {
+    try { initField($('#bgField')); } catch (e2) { console.warn('bg', e2); }
+  }
 
   // ---------- Nav scroll state ----------
   const nav = $('#nav');
@@ -123,6 +129,17 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  // ---------- Hero entrance (anime.js timeline, GPU-only) ----------
+  try {
+    if (window.anime && !prefersReducedMotion()) {
+      window.anime.timeline({ easing: 'easeOutExpo', duration: 800 })
+        .add({ targets: '.hero__kicker', opacity: [0, 1], translateY: [12, 0] }, 150)
+        .add({ targets: '.hero__lede', opacity: [0, 1], translateY: [14, 0] }, '-=650')
+        .add({ targets: '.hero__cta', opacity: [0, 1], translateY: [14, 0] }, '-=650')
+        .add({ targets: '.hero__stage', opacity: [0, 1], translateY: [18, 0] }, '-=700');
+    }
+  } catch (e) { console.warn('hero entrance', e); }
+
   // ---------- Init sections ----------
   initHeroStage($('#heroShield'));
   initPlatform();
@@ -131,6 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initPricing();
   initModals();
   initDashboard();
+  initMotion();
 
   // ---------- Active nav highlight ----------
   const sections = $$('section[data-section]');

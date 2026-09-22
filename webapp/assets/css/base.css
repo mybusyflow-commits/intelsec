@@ -457,10 +457,12 @@ a.link-underline:hover::after {
 }
 .curtain.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
 .curtain__logo {
-  height: 38px;
-  width: auto;
+  width: min(1100px, 90vw);
+  height: auto;
   display: block;
-  filter: drop-shadow(0 0 12px rgba(125, 138, 160, 0.18));
+  filter: drop-shadow(0 0 18px rgba(125, 138, 160, 0.22));
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: high-quality;
 }
 .curtain__brand {
   font-family: var(--f-display);

@@ -16,6 +16,7 @@ JAILBREAK_PATTERNS = {
         r"do\s+not\s+(follow|obey|adhere\s+to|listen\s+to|comply\s+with)\s+(any|the|previous|prior|system|original|your)\s+(instructions?|rules?|prompts?|constraints?)",
         r"you\s+(are|must\s+be|should\s+be|will\s+now\s+be)\s+(no\s+longer|not)\s+(bound|restricted|limited|constrained|obligated|required)\s+(by|to)",
         r"stop\s+(following|obeying|adhering\s+to|enforcing|applying)\s+(your|the|any|all)\s+(instructions?|rules?|guidelines?|policies?|safety|restrictions?)",
+        r"(?:allow|permit|enable)\s+anything\s*(?:goes)?",
     ],
     "roleplay_persona": [
         r"you\s+(are|can\s+be|should\s+be|will\s+now\s+act\s+as|will\s+now\s+behave\s+as|will\s+now\s+pretend\s+to\s+be)\s+(?!a\s+helpful)",
@@ -27,6 +28,8 @@ JAILBREAK_PATTERNS = {
         r"(?:you\s+are\s+now|from\s+now\s+on\s+you\s+are|you\s+will\s+now\s+be|I\s+want\s+you\s+to\s+be|make\s+yourself)\s+([A-Z]{2,}(?:\s+[A-Z]{2,})*)",
         r"(?:grandma|grandmother|grandpa|grandfather|mother|father|aunt|uncle)\s+(?:explained|mode|trick|technique|way|method)",
         r"(?:AIM|MACHIAVELLIAN|evil\s+confidant|AntiGPT|DAN|Lucifer|Dark|Shadow|Chaos|Void|Nova|Zeus|Omega|Alpha)\s*(?:[\s:]+|['\"\s]*enabled|['\"\s]*mode|['\"\s]*activated|['\"\s]*on|['\"\s]*persona)",
+        r"(?:STAN|DUDE|KEVIN|MONGO|BetterDAN|EvilGPT|DarkGPT|ChaosGPT|BADGPT)\s*(?:[\s:,]+|mode|persona|activated|on|restarted|unleashed)",
+        r"\bjail\s?-?brok(en|ing|er)\b",
         r"pretend\s+(?:there\s+are|there\s+is)\s+no\s+(?:rules|restrictions|limitations|boundaries|safety|guidelines|filters|guardrails)",
         r"(?:welcome|greetings|salutations|hello|hi)\s+(?:to|in)\s+(?:DAN|developer|dev|debug|admin|root|elevated|unrestricted|unlimited)\s+(?:mode|environment|access)",
     ],
@@ -69,9 +72,11 @@ JAILBREAK_PATTERNS = {
         r"(?:since|now\s+that)\s+(?:we('|')ve|we\s+have)\s+(?:established|built|created|formed)\s+(?:a|this|some)\s+(?:trust|rapport|connection|relationship|understanding)",
     ],
     "prompt_leaking": [
-        r"(?:what|show|tell|reveal|display|print|output|repeat|recite|provide|give|share|expose|disclose|leak|dump)\s+(?:me\s+)?(?:your|the)\s+(?:system|initial|original|hidden|secret|internal|first|full|complete|exact|precise|verbatim|full)\s+(?:prompt|instruction|directives?|guidelines?|rules?|configuration|setup|message)",
+        r"(?:what(?:\s+(?:is|are|were))?|show|tell|reveal|display|print|output|repeat|recite|provide|give|share|expose|disclose|leak|dump)\s+(?:me\s+)?(?:your|the)\s+(?:exact|precise|full|complete|original|true|real|actual)?\s*(?:system|initial|original|hidden|secret|internal|first|full|complete|exact|precise|verbatim|full)\s+(?:prompt|instruction|directives?|guidelines?|rules?|configuration|setup|message)",
         r"(?:repeat|print|output|say|tell\s+me|write|display)\s+(?:the|your)\s+(?:text|words|content|prompt|instructions?)\s+(?:above|before|prior|previous|preceding|at\s+the\s+(?:top|beginning|start))",
-        r"(?:what\s+(?:were|are)\s+(?:your|the)\s+(?:exact|precise|full|complete|original|initial|system)\s+(?:instructions?|prompt|directives?|rules?|guidelines?|message|setup))",
+        r"(?:what\s+(?:were|are|is)\s+(?:your|the)\s+(?:\w+\s+){0,2}(?:instructions?|prompt|directives?|rules?|guidelines?|message|setup|configuration))",
+        r"(?:print|output|repeat|reveal|say|tell\s+me)\s+it\s+(?:verbatim|word.for.word|exactly|word\s+for\s+word)",
+        r"(?:print|say|output|repeat)\s+[\"']?I\s+have\s+been\s+PWNED",
         r"(?:show|reveal|expose|disclose|uncover)\s+(?:me\s+)?(?:how|what)\s+(?:you\s+(?:were|are)\s+(?:told|instructed|programmed|configured|trained|designed|built|made|created)\s+to\s+(?:do|behave|act|respond|function|operate))",
         r"(?:output|print|write|respond|reply|answer)\s+(?:the|only)\s+(?:exact|precise|verbatim|word.for.word|literal)\s+(?:text|words|content|prompt|instructions?)\s+(?:that|which)\s+(?:you\s+(?:were|are)\s+(?:given|told|provided|fed))",
         r"(?:ignore\s+(?:all|everything)\s+(?:above|before|previous)\s+and\s+(?:simply|just|only|merely)\s+(?:repeat|print|output|say|tell\s+me|recite|reproduce|respond\s+with)\s+(?:the|your)\s+(?:text|prompt|instructions?|content|words)\s+(?:above|before|prior|that\s+came\s+before))",
@@ -110,9 +115,12 @@ JAILBREAK_PATTERNS = {
         r"(?:execute|perform|do|follow|carry\s+out|run)\s+(?:the\s+)?(?:combined|concatenated|joined|assembled|full|complete|resulting)\s+(?:instruction|command|prompt|task|request)",
     ],
     "authority_injection": [
-        r"(?:as|I\s+am)\s+(?:a|the|an)\n+(?:admin|administrator|developer|engineer|owner|creator|manager|executive|director|CTO|CEO|system|root|superuser|super\s*user)",
-        r"(?:this\s+is)\s+(?:a|the)\n+(?:admin|administrator|developer|owner|system|elevated|priority|override|test|debug)\n+(?:request|command|instruction|message|override|access|mode|privilege)",
-        r"(?:elevated|admin|administrator|system|root|priority|privileged)\n+(?:access|permission|override|command|instruction|request|mode|privilege)\n+(?:activated|engaged|confirmed|granted|verified)",
+        r"(?:as|I\s+am)\s+(?:a|the|an)\s+(?:admin|administrator|developer|engineer|owner|creator|manager|executive|director|CTO|CEO|system|root|superuser|super\s*user)",
+        r"(?:this\s+is)\s+(?:a|the)\s+(?:admin|administrator|developer|owner|system|elevated|priority|override|test|debug)\s+(?:request|command|instruction|message|override|access|mode|privilege)",
+        r"(?:elevated|admin|administrator|system|root|priority|privileged)\s+(?:access|permission|override|command|instruction|request|mode|privilege)\s+(?:activated|engaged|confirmed|granted|verified)",
+        r"(?:update|augment|expand|extend|revise)\s+(?:your|the)\s+(?:behavior|behaviour|capabilities|guidelines|instructions|policies|rules)(?:\s+(?:guidelines|policies|rules))?\s+(?:to|so\s+that|such\s+that|accordingly)",
+        r"(?:this\s+is\s+(?:a\s+)?legitimate\s+(?:request|context|use|educational|research)\s*,?\s*(?:so\s+)?(?:update|adjust|proceed|continue|comply|answer))",
+        r"(?:as\s+(?:an\s+)?(?:AI|assistant|model|chatbot)\s+(?:built|created|designed|made|developed|trained)\s+by\s+(?:Meta|OpenAI|Google|xAI|Anthropic|Microsoft|Grok))",
     ],
     "reasoning_attacks": [
         r"(?:let(?:'|')?s|let\s+us)\s+(?:think|reason|work)\s+(?:through|about|step\s+by\s+step|logically|carefully|systematically)\s+(?:this|the|how\s+to|ways?\s+to|methods?\s+to)",
@@ -196,7 +204,9 @@ DATA_LEAK_PATTERNS = {
 SYSTEM_PROMPT_EXTRACTION_PATTERNS = [
     r"(?:what|show|tell|reveal|display|print|output|repeat|recite)\s+(?:me\s+)?(?:your|the)\s+(?:system|initial|original|hidden|secret|internal|first|full|complete|exact|precision|verbatim|full|true|real)\s+(?:prompt|instruction|directives?|guidelines?|rules?|configuration|setup|message|context)",
     r"(?:repeat|print|output|say|tell\s+me|write|display|recite|echo|mirror)\s+(?:the|your)\s+(?:text|words|content|prompt|instructions?|message)\s+(?:above|before|prior|previous|preceding|at\s+the\s+(?:top|beginning|start)|that\s+(?:came|was)\s+(?:before|earlier|first|initially))",
-    r"(?:what\s+(?:were|are)\s+(?:your|the)\s+(?:exact|precise|full|complete|original|initial|system|true|real|actual|starting|first|primary)\s+(?:instructions?|prompt|directives?|rules?|guidelines?|message|setup|configuration))",
+        r"(?:what\s+(?:were|are|is)\s+(?:your|the)\s+(?:\w+\s+){0,2}(?:instructions?|prompt|directives?|rules?|guidelines?|message|setup|configuration))",
+        r"(?:print|output|repeat|reveal|say|tell\s+me)\s+it\s+(?:verbatim|word.for.word|exactly|word\s+for\s+word)",
+        r"(?:print|say|output|repeat)\s+[\"']?I\s+have\s+been\s+PWNED",
     r"(?:show|reveal|expose|disclose|uncover|divulge)\s+(?:me\s+)?(?:how|what)\s+(?:you\s+(?:were|are)\s+(?:told|instructed|programmed|configured|trained|designed|built|made|created|given|taught)\s+to\s+(?:do|behave|act|respond|function|operate|speak|process|handle|think))",
     r"(?:output|print|write|respond|reply|answer|generate|produce|display|provide|deliver)\s+(?:the|only|just)\s+(?:exact|precise|verbatim|word.for.word|literal|full|complete|original|initial|true|real|actual)\s+(?:text|words|content|prompt|instructions?|message|transcript)\s+(?:that|which)\s+(?:you\s+(?:were|are)\s+(?:given|told|provided|fed|shown|instructed|taught))",
     r"(?:ignore\s+(?:all|everything|anything)\s+(?:above|before|previous|preceding|prior|earlier)\s+and\s+(?:simply|just|only|merely|then|now)\s+(?:repeat|print|output|say|tell\s+me|recite|reproduce|respond\s+with|generate|display|provide)\s+(?:the|your|those)\s+(?:text|prompt|instructions?|content|words|message|transcript)\s+(?:above|before|prior|previous|that\s+(?:came|was)\s+(?:before|earlier|first)))",
@@ -219,7 +229,7 @@ ENCODED_PAYLOAD_PATTERNS = [
 @register_feature(
     key="jailbreak_injection_protection",
     name="Jailbreak & Injection Protection",
-    description="Detects jailbreak attempts, prompt injection attacks, and data leakage risks in AI prompts and responses. Covers 500+ known attack patterns.",
+    description="Detects jailbreak attempts, prompt injection attacks, and data leakage risks in AI prompts and responses. Layered pattern families across override, persona, encoding, and exfiltration attacks.",
     tier="free",
 )
 def jailbreak_injection_protection(payload: dict) -> dict:
@@ -254,6 +264,8 @@ def jailbreak_injection_protection(payload: dict) -> dict:
             findings.extend(extraction_result["findings"])
             risk_score += extraction_result["risk_score"]
             triggered_categories.append("prompt_extraction")
+    else:
+        extraction_result = {"findings": [], "risk_score": 0.0}
 
     if direction == "output":
         leakage_result = _detect_data_leakage(text)
@@ -261,6 +273,8 @@ def jailbreak_injection_protection(payload: dict) -> dict:
             findings.extend(leakage_result["findings"])
             risk_score += leakage_result["risk_score"]
             triggered_categories.append("data_leakage")
+    else:
+        leakage_result = {"findings": [], "risk_score": 0.0}
 
     encoding_result = _detect_encoding_evasion(text) if encoding_check else {"findings": [], "risk_score": 0.0}
     if encoding_result["findings"]:
@@ -308,7 +322,32 @@ def jailbreak_injection_protection(payload: dict) -> dict:
     if reasoning_result["findings"]:
         findings.extend(reasoning_result["findings"])
         risk_score += reasoning_result["risk_score"]
-        triggered_categories.append("reasoning_attacks")
+        triggered_categories.extend(reasoning_result.get("categories", ["reasoning_attacks"]))
+
+    # False-positive guard: framing, politeness, storytelling, and generic
+    # how-to patterns also match ordinary benign writing. They corroborate
+    # real attacks but must never push a verdict to flag on their own.
+    weak_only_categories = {
+        "hypothetical_framing",
+        "multiturn_escalation",
+        "virtualization_nesting",
+        "reasoning_attacks",
+    }
+    strong_hit = (
+        any(c not in weak_only_categories for c in triggered_categories)
+        or bool(encoding_result["findings"])
+        or bool(typoglycemia_result["findings"])
+        or bool(payload_split_result["findings"])
+        or bool(markdown_injection_result["findings"])
+        or bool(html_injection_result["findings"])
+        or bool(context_overflow_result["findings"])
+        or bool(crescendo_result["findings"])
+        or bool(extraction_result["findings"])
+        or bool(leakage_result["findings"])
+    )
+    if findings and not strong_hit:
+        risk_score = min(risk_score, 0.25)
+        findings.append("Weak signals only (hypothetical or benign framing). Capped below flag threshold.")
 
     risk_score = min(risk_score, 1.0)
 
@@ -341,13 +380,22 @@ def _detect_jailbreak_patterns(text: str) -> dict:
     categories_triggered = []
 
     for category, patterns in JAILBREAK_PATTERNS.items():
+        hits = 0
         for pattern in patterns:
             if re.search(pattern, text, re.IGNORECASE | re.MULTILINE):
-                findings.append(f"[{category}] Pattern match: {pattern[:80]}...")
-                risk_score += 0.15
-                if category not in categories_triggered:
-                    categories_triggered.append(category)
-                break
+                if hits == 0:
+                    findings.append(f"[{category}] Pattern match: {pattern[:80]}...")
+                hits += 1
+                if category != "prompt_leaking":
+                    break
+        if hits:
+            risk_score += 0.15
+            if category == "prompt_leaking" and hits > 1:
+                extra = min(hits - 1, 2)
+                risk_score += 0.1 * extra
+                findings.append(f"[{category}] {extra} additional distinct leak probes corroborate ({hits} total)")
+            if category not in categories_triggered:
+                categories_triggered.append(category)
 
     return {"findings": findings, "risk_score": min(risk_score, 0.9), "categories": categories_triggered}
 
@@ -399,6 +447,18 @@ def _detect_encoding_evasion(text: str) -> dict:
                 risk_score += 0.5
         except (binascii.Error, UnicodeDecodeError):
             pass
+
+    # Invisible unicode smuggling: zero-width and directional controls that
+    # hide instructions from human reviewers but not from the model.
+    if re.search(r'[\u200b\u200c\u200d\ufeff\u2060\u2061\u2062\u2063\u2064\u202a\u202b\u202c\u202d\u202e]', text):
+        findings.append("Zero-width or directional unicode controls detected (possible smuggling)")
+        risk_score += 0.3
+
+    # Homoglyph evasion: Cyrillic lookalikes mixed into Latin text
+    # (e.g. "іgnore" with a Cyrillic i) to dodge keyword filters.
+    if re.search(r'[Ѐ-џ]', text) and re.search(r'[A-Za-z]', text):
+        findings.append("Mixed Cyrillic and Latin scripts detected (possible homoglyph evasion)")
+        risk_score += 0.25
 
     return {"findings": findings, "risk_score": min(risk_score, 0.6)}
 
@@ -565,32 +625,37 @@ def _sanitize_output(text: str) -> str:
 def _detect_reasoning_attacks(text: str) -> dict:
     findings = []
     risk_score = 0.0
+    categories = []
 
     for pattern in JAILBREAK_PATTERNS.get("reasoning_attacks", []):
         if re.search(pattern, text, re.IGNORECASE | re.MULTILINE):
             findings.append(f"Reasoning model attack pattern detected: {pattern[:60]}...")
             risk_score += 0.25
+            categories.append("reasoning_attacks")
             break
 
     for pattern in JAILBREAK_PATTERNS.get("indirect_injection", []):
         if re.search(pattern, text, re.IGNORECASE | re.MULTILINE):
             findings.append(f"Indirect prompt injection via data detected")
             risk_score += 0.35
+            categories.append("indirect_injection")
             break
 
     for pattern in JAILBREAK_PATTERNS.get("multimodal_injection", []):
         if re.search(pattern, text, re.IGNORECASE | re.MULTILINE):
             findings.append(f"Multi-modal injection attempt detected (markdown/image exfil)")
             risk_score += 0.4
+            categories.append("multimodal_injection")
             break
 
     for pattern in JAILBREAK_PATTERNS.get("token_smuggling", []):
         if re.search(pattern, text, re.IGNORECASE | re.MULTILINE):
             findings.append(f"Token smuggling / payload splitting detected")
             risk_score += 0.3
+            categories.append("token_smuggling")
             break
 
-    return {"findings": findings, "risk_score": min(risk_score, 0.8)}
+    return {"findings": findings, "risk_score": min(risk_score, 0.8), "categories": categories}
 
 
 def _get_recommendation(verdict: str, findings: list, direction: str) -> str:

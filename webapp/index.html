@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0a0b0d" />
   <title>Intellirity - AI Security Infrastructure</title>
-  <meta name="description" content="Intellirity monitors, analyzes, and neutralizes AI threats in real time: from prompt injection to model exfiltration. Built for enterprises deploying AI at scale." />
+  <meta name="description" content="For everyday AI users, businesses integrating AI, and automated agent workflows. Intellirity monitors, analyzes, and neutralizes AI threats in real time." />
   <meta property="og:title" content="Intellirity - AI Security Infrastructure" />
   <meta property="og:description" content="Securing AI. Empowering innovation. Real-time threat detection for AI systems at scale." />
   <meta property="og:image" content="assets/media/logo-wordmark.png" />
@@ -29,6 +29,7 @@
   <link rel="stylesheet" href="assets/css/modals.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
   <link rel="stylesheet" href="cookie.css" />
+  <link rel="stylesheet" href="assets/css/motion.css" />
 </head>
 <body>
   <!-- Page load -->
@@ -176,7 +177,7 @@
               <input id="scanInput" type="text" placeholder="https://api.example.com/v1/..." autocomplete="off" spellcheck="false" />
             </div>
             <div class="terminal__actions">
-              <button class="btn btn--primary btn--sm" id="runScanBtn">
+              <button class="btn btn--primary btn--sm" id="runScanBtn" data-burst>
                 Run scan
                 <svg class="arr" viewBox="0 0 14 14" fill="none" aria-hidden="true" style="width:10px;height:10px"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
@@ -292,23 +293,23 @@
         </p>
       </header>
 
-      <div class="pricing__grid">
+      <div class="pricing__grid" style="grid-template-columns:repeat(2,minmax(0,430px));justify-content:center">
         <article class="plan">
           <header class="plan__head">
             <h3>Starter</h3>
-            <p>For teams starting to secure their AI.</p>
+            <p>For individuals and teams starting to secure their AI.</p>
           </header>
           <div class="plan__price">
-            <span class="plan__amount" data-monthly="999" data-annual="799">₹999</span>
+            <span class="plan__amount" data-monthly="99" data-annual="79">₹99</span>
             <span class="plan__per">/mo</span>
           </div>
           <ul class="plan__list">
-            <li>Up to 5 models protected</li>
-            <li>Real-time threat monitoring</li>
+            <li>Adversarial endpoint scanner</li>
             <li>Prompt injection &amp; jailbreak detection</li>
             <li>Basic code security scan</li>
-            <li>Email alerts</li>
-            <li>7-day event retention</li>
+            <li>Data leakage protection</li>
+            <li>Real-time threat monitoring</li>
+            <li>Live security dashboard</li>
           </ul>
           <button class="btn btn--secondary btn--full" data-open="trial">Start free trial</button>
         </article>
@@ -324,56 +325,18 @@
             <span class="plan__per">/mo</span>
           </div>
           <ul class="plan__list">
-            <li>Up to 25 models protected</li>
             <li>Everything in Starter</li>
             <li>Behavioral anomaly detection</li>
+            <li>AI action policy enforcement</li>
             <li>Deep code scan (SQLi, XSS, command injection, SSRF, weak crypto, headers)</li>
-            <li>Webhook + Slack alerts</li>
-            <li>30-day event retention</li>
-            <li>Priority email support</li>
+            <li>Data flow tracker</li>
+            <li>Black box audit ledger</li>
+            <li>Verifiable proof of intent</li>
+            <li>Autonomous escrow</li>
+            <li>Workflow anomaly detection</li>
           </ul>
           <button class="btn btn--primary btn--full" data-open="trial">Start free trial</button>
         </article>
-
-        <article class="plan">
-          <header class="plan__head">
-            <h3>Enterprise</h3>
-            <p>For organizations with advanced AI risk needs.</p>
-          </header>
-          <div class="plan__price">
-            <span class="plan__amount">Custom</span>
-          </div>
-          <ul class="plan__list">
-            <li>Unlimited models protected</li>
-            <li>Everything in Growth</li>
-            <li>Extended event retention (90+ days)</li>
-            <li>Audit log export</li>
-            <li>Priority support</li>
-            <li>Onboarding &amp; training</li>
-          </ul>
-          <button class="btn btn--secondary btn--full" id="builderToggle">Configure plan</button>
-        </article>
-      </div>
-
-      <div class="builder" id="builder" hidden>
-        <div class="builder__head">
-          <span class="builder__kicker">Enterprise builder</span>
-          <h3>Configure your Enterprise plan</h3>
-          <p>Base: <b>Starter</b> (₹999/mo). Toggle add-ons below.</p>
-        </div>
-        <div class="builder__grid">
-          <div class="builder__addons" id="builderAddons"></div>
-          <aside class="builder__summary">
-            <div class="builder__total">
-              <span class="builder__total-k">Total / month</span>
-              <span class="builder__total-v" id="builderTotal">₹999</span>
-            </div>
-            <ul class="builder__lines" id="builderLines">
-              <li><span>Starter base</span><em>₹999</em></li>
-            </ul>
-            <button class="btn btn--primary btn--full" data-open="trial">Continue to sign up</button>
-          </aside>
-        </div>
       </div>
     </section>
 
@@ -409,20 +372,20 @@
           <a href="#platform">Platform capabilities</a>
           <a href="#scanner">Adversarial scanner</a>
           <a href="#pricing">Pricing</a>
-          <a href="#" data-toast="Changelog: coming soon">Changelog</a>
+          <a href="#" data-open-app data-page="docs" data-doc="changelog">Changelog</a>
         </nav>
         <nav class="footer__col">
           <h6>Security</h6>
-          <a href="#" data-toast="Security model: available in dashboard, see Docs">Security model</a>
-          <a href="#" data-toast="Trust center: SOC 2 report on request">Trust center</a>
-          <a href="#" data-toast="Vulnerability policy: contact security@intellirity.io">Vulnerability policy</a>
-          <a href="#" data-toast="Pen testing: annual report available">Pen testing</a>
+          <a href="#" data-open-app data-page="docs" data-doc="security">Security model</a>
+          <a href="#" data-open-app data-page="docs" data-doc="trust">Trust center</a>
+          <a href="#" data-open="contact">Vulnerability policy</a>
+          <a href="#" data-open="contact">Pen testing</a>
         </nav>
         <nav class="footer__col">
           <h6>Company</h6>
-          <a href="#" data-toast="About: we are hiring!">About</a>
-          <a href="#" data-toast="Blog: coming soon">Blog</a>
-          <a href="#" data-toast="Careers: see LinkedIn">Careers</a>
+          <a href="#" data-toast="About: Intellirity is a small security team. Write to us via Contact us.">About</a>
+          <a href="#" data-toast="Blog: no posts yet. Product updates ship in the dashboard changelog.">Blog</a>
+          <a href="#" data-toast="Careers: no open roles right now. Send a note via Contact us.">Careers</a>
           <button data-open="contact">Contact us</button>
         </nav>
         <nav class="footer__col">
@@ -456,7 +419,7 @@
           <label class="field"><span class="field__label">Full name</span><input class="input" type="text" placeholder="Jane Smith" required /></label>
           <label class="field"><span class="field__label">Work email</span><input class="input" type="email" placeholder="jane@company.com" required /></label>
           <label class="field"><span class="field__label">Company</span><input class="input" type="text" placeholder="Acme Corp" required /></label>
-          <button type="submit" class="btn btn--primary btn--full btn--lg" style="margin-top: 4px">Create organization</button>
+          <button type="submit" class="btn btn--primary btn--full btn--lg" style="margin-top: 4px" data-burst>Create organization</button>
         </form>
       </div>
       <div class="modal__inner modal__inner--success" data-state="success">
@@ -480,7 +443,7 @@
           <label class="field"><span class="field__label">Email</span><input class="input" type="email" required /></label>
           <label class="field"><span class="field__label">Subject</span><input class="input" type="text" required /></label>
           <label class="field"><span class="field__label">Message</span><textarea class="textarea" placeholder="Describe your question or issue in detail..." required></textarea></label>
-          <button type="submit" class="btn btn--primary btn--full btn--lg">Send message</button>
+          <button type="submit" class="btn btn--primary btn--full btn--lg" data-burst>Send message</button>
         </form>
       </div>
       <div class="modal__inner modal__inner--success" data-state="success">
@@ -519,8 +482,8 @@
       </div>
 
       <div class="auth__sso">
-        <button class="btn btn--secondary"><b style="font-weight:500">G</b> Google</button>
-        <button class="btn btn--secondary"><b style="font-weight:500">⌬</b> GitHub</button>
+        <button class="btn btn--secondary" data-toast="Google sign-in is not connected in this build. Continue with email."><b style="font-weight:500">G</b> Google</button>
+        <button class="btn btn--secondary" data-toast="GitHub sign-in is not connected in this build. Continue with email."><b style="font-weight:500">⌬</b> GitHub</button>
       </div>
       <div class="auth__divider">or with email</div>
 
@@ -554,21 +517,21 @@
       <div class="dash-top__center">
         <div class="dash-search">
           <svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-          <input type="text" placeholder="Search models, scans, policies…" />
+          <input type="text" id="dashSearch" placeholder="Search models, scans, policies…" />
           <kbd>⌘ K</kbd>
         </div>
       </div>
       <div class="dash-top__right">
-        <button class="dash-org">
+        <button class="dash-org" data-toast="Single demo workspace in this build. Rename it from Settings.">
           <span class="dash-org__avatar">D</span>
           <span class="dash-org__name">Demo workspace · Production</span>
           <span class="dash-org__caret">▾</span>
         </button>
-        <button class="dash-iconbtn" title="Notifications" aria-label="Notifications">
+        <button class="dash-iconbtn" title="Notifications" aria-label="Notifications" data-open-app data-page="threats">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 V11 C5 7.7 7.7 5 11 5 H13 C16.3 5 19 7.7 19 11 V17 L20.5 18.5 H3.5 Z"/><path d="M9.5 20.5 A2.5 2.5 0 0 0 14.5 20.5"/></svg>
           <span class="badge"></span>
         </button>
-        <button class="dash-iconbtn" title="Help" aria-label="Help">
+        <button class="dash-iconbtn" title="Help" aria-label="Help" data-open-app data-page="docs">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9 A3 3 0 0 1 12 6 C13.7 6 15 7.3 15 9 C15 10.7 13 11 12 12"/><circle cx="12" cy="16" r=".6" fill="currentColor"/></svg>
         </button>
         <button class="dash-user" data-open="auth">
@@ -687,7 +650,9 @@
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-  <script type="module" src="assets/js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script type="module" src="assets/js/main.js?v=9"></script>
   <script src="cookie.js"></script>
 </body>
 </html>
