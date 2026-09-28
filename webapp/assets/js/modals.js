@@ -1,7 +1,7 @@
 /* =========================================================
    modals.js: open/close + form submit + auth
    ========================================================= */
-import { openApp } from './dashboard.js?v=9';
+import { openApp } from './dashboard.js?v=12';
 
 export function initModals() {
   const modals = document.querySelectorAll('.modal');

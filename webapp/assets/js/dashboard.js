@@ -327,6 +327,7 @@ function initSentinel(){
   let px = window.innerWidth / 2, py = window.innerHeight / 2;
   document.addEventListener('pointermove', function(e){ px = e.clientX; py = e.clientY; }, { passive: true });
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let cx = 0, cy = 0;
   (function loop(){
     requestAnimationFrame(loop);
     if(reduce) return;
@@ -339,7 +340,12 @@ function initSentinel(){
     let dy = (py - (r.top + r.height / 2)) / (r.height / 2);
     dx = Math.max(-1, Math.min(1, dx));
     dy = Math.max(-1, Math.min(1, dy));
-    pupil.style.transform = 'translate(' + (dx * 9).toFixed(1) + 'px,' + (dy * 6).toFixed(1) + 'px)';
+    // Saccade: snap fast on large jumps, glide on small ones, like a real eye.
+    const jump = Math.hypot(dx - cx, dy - cy);
+    const f = jump > 0.55 ? 0.45 : 0.09;
+    cx += (dx - cx) * f;
+    cy += (dy - cy) * f;
+    pupil.style.transform = 'translate(' + (cx * 9).toFixed(1) + 'px,' + (cy * 6).toFixed(1) + 'px)';
   })();
   setInterval(function(){
     if(reduce) return;
@@ -1941,25 +1947,42 @@ function bindFeatureFlow(main) {
     ['model','external',     'external']
   ];
   const colors = { internal: '#d8a24a', model: '#5fa37a', external: '#c95a4f' };
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function nodeById(id) { return nodes.find(n => n.id === id); }
 
   const start = performance.now();
   const packets = [];
+  const sparks = [];
   function spawnPacket(edge) {
+    if (packets.length > 40) return;
     packets.push({
       edge,
       t: 0,
+      trail: [],
+      sparked: false,
       speed: 0.005 + Math.random() * 0.005
     });
   }
-  setInterval(() => {
-    const edge = edges[Math.floor(Math.random() * edges.length)];
-    spawnPacket(edge);
-  }, 600);
+  function burstSparks(x, y) {
+    for (let i = 0; i < 7; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 0.6 + Math.random() * 1.6;
+      sparks.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1 });
+    }
+    if (sparks.length > 90) sparks.splice(0, sparks.length - 90);
+  }
+  if (!reduceMotion) {
+    setInterval(() => {
+      if (document.hidden) return;
+      const edge = edges[Math.floor(Math.random() * edges.length)];
+      spawnPacket(edge);
+    }, 600);
+  }
 
   function tick() {
     const t = (performance.now() - start) / 1000;
+    if (document.hidden) { requestAnimationFrame(tick); return; }
     ctx.clearRect(0, 0, w, h);
     // grid
     ctx.strokeStyle = 'rgba(255,255,255,0.03)';
@@ -1994,10 +2017,29 @@ function bindFeatureFlow(main) {
         ctx.stroke();
       }
     });
+    // Blocked edge: dashes march into the X, showing active interdiction.
+    (function () {
+      const blocked = edges.find(function (e) { return e[2] === 'external'; });
+      if (!blocked) return;
+      const na = nodeById(blocked[0]), nb = nodeById(blocked[1]);
+      ctx.save();
+      ctx.strokeStyle = colors.external;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([5, 7]);
+      ctx.lineDashOffset = -((t * 28) % 12);
+      ctx.beginPath();
+      ctx.moveTo(na.x * w, na.y * h);
+      ctx.lineTo(nb.x * w, nb.y * h);
+      ctx.stroke();
+      ctx.restore();
+    })();
     // nodes
-    nodes.forEach(n => {
+    nodes.forEach((n, xi) => {
       const x = n.x * w, y = n.y * h;
-      const r = 18;
+      const base = 18;
+      const amp = n.kind === 'external' ? 2.6 : 1.1;
+      const r = reduceMotion ? base : base + Math.sin(t * 2.2 + xi * 1.3) * amp;
       // halo
       const grd = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
       grd.addColorStop(0, colors[n.kind] + '40');
@@ -2009,13 +2051,21 @@ function bindFeatureFlow(main) {
       ctx.strokeStyle = colors[n.kind];
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // throbbing containment ring on the blocked node
+      if (n.kind === 'external' && !reduceMotion) {
+        ctx.globalAlpha = 0.35 + 0.25 * Math.sin(t * 3.1);
+        ctx.strokeStyle = colors.external;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(x, y, r + 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       // label
       ctx.fillStyle = 'rgba(255,255,255,0.75)';
       ctx.font = '11px "Inter Tight"';
       ctx.textAlign = 'center';
       ctx.fillText(n.id.toUpperCase(), x, y + 3);
     });
-    // packets
+    // packets with glow trails; sparks burst where flows hit the blockade
     for (let i = packets.length - 1; i >= 0; i--) {
       const p = packets[i];
       p.t += p.speed;
@@ -2024,11 +2074,36 @@ function bindFeatureFlow(main) {
       const na = nodeById(a), nb = nodeById(b);
       const x = na.x * w + (nb.x * w - na.x * w) * p.t;
       const y = na.y * h + (nb.y * h - na.y * h) * p.t;
+      if (!p.sparked && kind === 'external' && p.t >= 0.5) {
+        p.sparked = true;
+        burstSparks((na.x * w + nb.x * w) / 2, (na.y * h + nb.y * h) / 2);
+      }
+      p.trail.push([x, y]);
+      if (p.trail.length > 6) p.trail.shift();
+      p.trail.forEach(function (pt, ti) {
+        ctx.globalAlpha = (ti + 1) / p.trail.length * 0.45;
+        ctx.fillStyle = colors[kind];
+        ctx.beginPath();
+        ctx.arc(pt[0], pt[1], 1 + (ti + 1) * 0.28, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
       ctx.fillStyle = colors[kind];
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fill();
     }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.x += s.vx; s.y += s.vy; s.life -= 0.03;
+      if (s.life <= 0) { sparks.splice(i, 1); continue; }
+      ctx.globalAlpha = s.life * 0.9;
+      ctx.fillStyle = '#e8a89e';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
     requestAnimationFrame(tick);
   }

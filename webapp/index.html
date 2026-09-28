@@ -20,16 +20,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="assets/css/reset.css" />
-  <link rel="stylesheet" href="assets/css/tokens.css" />
-  <link rel="stylesheet" href="assets/css/base.css" />
-  <link rel="stylesheet" href="assets/css/components.css" />
-  <link rel="stylesheet" href="assets/css/sections.css" />
-  <link rel="stylesheet" href="assets/css/dashboard.css" />
-  <link rel="stylesheet" href="assets/css/modals.css" />
-  <link rel="stylesheet" href="assets/css/responsive.css" />
-  <link rel="stylesheet" href="cookie.css" />
-  <link rel="stylesheet" href="assets/css/motion.css" />
+  <link rel="stylesheet" href="assets/css/reset.css?v=12" />
+  <link rel="stylesheet" href="assets/css/tokens.css?v=12" />
+  <link rel="stylesheet" href="assets/css/base.css?v=12" />
+  <link rel="stylesheet" href="assets/css/components.css?v=12" />
+  <link rel="stylesheet" href="assets/css/sections.css?v=12" />
+  <link rel="stylesheet" href="assets/css/dashboard.css?v=12" />
+  <link rel="stylesheet" href="assets/css/modals.css?v=12" />
+  <link rel="stylesheet" href="assets/css/responsive.css?v=12" />
+  <link rel="stylesheet" href="cookie.css?v=12" />
+  <link rel="stylesheet" href="assets/css/motion.css?v=12" />
 </head>
 <body>
   <!-- Page load -->
@@ -95,11 +95,11 @@
             If you're someone who uses AI for everyday work, a business weaving AI into its products, or a power user who has automated everything through agents. Intellirity is built for you.
           </p>
           <div class="hero__cta">
-            <button class="btn btn--primary btn--lg" data-open="trial">
+            <button class="btn btn--primary btn--lg" data-open="trial" data-burst>
               Start free trial
               <svg class="arr" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <button class="btn btn--secondary btn--lg" data-open-app>Open dashboard</button>
+            <button class="btn btn--secondary btn--lg" data-open-app data-burst>Open dashboard</button>
           </div>
         </div>
 
@@ -114,6 +114,10 @@
 
       <div class="hero__footer" aria-hidden="true"></div>
     </section>
+
+    <div class="ticker" id="threatTicker" hidden>
+      <div class="ticker__track" id="tickerTrack"></div>
+    </div>
 
     <!-- ====== AUDIENCE STRIP: who this is for, BELOW the hero ====== -->
     <section class="trust">
@@ -311,7 +315,7 @@
             <li>Real-time threat monitoring</li>
             <li>Live security dashboard</li>
           </ul>
-          <button class="btn btn--secondary btn--full" data-open="trial">Start free trial</button>
+          <button class="btn btn--secondary btn--full" data-open="trial" data-burst>Start free trial</button>
         </article>
 
         <article class="plan plan--featured">
@@ -335,7 +339,7 @@
             <li>Autonomous escrow</li>
             <li>Workflow anomaly detection</li>
           </ul>
-          <button class="btn btn--primary btn--full" data-open="trial">Start free trial</button>
+          <button class="btn btn--primary btn--full" data-open="trial" data-burst>Start free trial</button>
         </article>
       </div>
     </section>
@@ -345,9 +349,12 @@
       <div class="cta__inner">
         <h2 class="cta__title">Your AI stack is<br/><em>already a target.</em></h2>
         <p class="cta__lede">Start your free trial. No credit card required. Full platform access, all features, from day one.</p>
-        <div class="cta__buttons">
-          <button class="btn btn--primary btn--lg" data-open="trial">Start free trial</button>
-          <button class="btn btn--secondary btn--lg" data-open-app>Open dashboard</button>
+        <div class="cta__buttons cta__buttons--stack">
+          <div class="lm-wrap" id="trialLiquid">
+            <iframe class="lm-frame" title="Start trial" src="assets/fx/liquid-metal-button.html" scrolling="no" frameborder="0"></iframe>
+            <button class="btn btn--primary btn--lg lm-fallback" data-open="trial" data-burst>Start free trial</button>
+          </div>
+          <button class="btn btn--secondary btn--lg" data-open-app data-burst>Open dashboard</button>
         </div>
       </div>
     </section>
@@ -652,7 +659,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script type="module" src="assets/js/main.js?v=9"></script>
+  <script type="module" src="assets/js/main.js?v=12"></script>
   <script src="cookie.js"></script>
 </body>
 </html>

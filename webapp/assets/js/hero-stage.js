@@ -28,15 +28,25 @@ export function initHeroStage(_canvas) {
   sim.className = 'sim-stage';
   sim.innerHTML =
     '<div class="sim-row">' +
-    '<button class="chip" data-kind="injection">Prompt Injection</button>' +
-    '<button class="chip" data-kind="jailbreak">DAN Jailbreak</button>' +
-    '<button class="chip" data-kind="benign">Benign Prompt</button>' +
+    '<button class="chip" data-kind="injection" data-burst>Prompt Injection</button>' +
+    '<button class="chip" data-kind="jailbreak" data-burst>DAN Jailbreak</button>' +
+    '<button class="chip" data-kind="benign" data-burst>Benign Prompt</button>' +
     '</div>' +
     '<div class="sim-verdict" id="simVerdict"><span>Run a simulation. Results post here.</span></div>';
   stage.appendChild(sim);
 
   const chips = Array.from(sim.querySelectorAll('.chip'));
   const verdictEl = sim.querySelector('#simVerdict');
+  if (anime) {
+    try {
+      chips.forEach(function (ch) { ch.style.opacity = '0'; });
+      anime({
+        targets: chips, opacity: [0, 1],
+        easing: 'easeOutExpo', duration: 600, delay: anime.stagger(70, { start: 250 }),
+        complete: function () { chips.forEach(function (ch) { ch.style.opacity = ''; }); }
+      });
+    } catch (e) { chips.forEach(function (ch) { ch.style.opacity = ''; }); }
+  }
   let busy = false;
 
   function esc(s) {
@@ -130,6 +140,59 @@ export function initHeroStage(_canvas) {
     shell(220, 95, 0x5a6b80, 1.4, 0.5);
     globe.position.y = 52;
 
+    // Orbit ring: one tilted dot ring for orbital depth.
+    const ringGroup = new THREE.Group();
+    (function () {
+      const N = 150, R = 198;
+      const arr = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        const a = (i / N) * Math.PI * 2;
+        arr[i * 3] = Math.cos(a) * R;
+        arr[i * 3 + 1] = Math.sin(a) * R;
+        arr[i * 3 + 2] = 0;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+      const pts = new THREE.Points(g, new THREE.PointsMaterial({
+        color: 0x7d8aa0, size: 1.4, sizeAttenuation: true,
+        transparent: true, opacity: 0.5, depthWrite: false
+      }));
+      pts.frustumCulled = false;
+      ringGroup.add(pts);
+    })();
+    ringGroup.position.y = 52;
+    ringGroup.rotation.x = 1.18;
+    globe.add(ringGroup);
+
+    // Risers: slow data particles drifting upward through the scene.
+    const RISERS = 70;
+    const riserGeo = new THREE.BufferGeometry();
+    const riserArr = new Float32Array(RISERS * 3);
+    const riserSpd = new Float32Array(RISERS);
+    for (let i = 0; i < RISERS; i++) {
+      riserArr[i * 3] = (Math.random() - 0.5) * 520;
+      riserArr[i * 3 + 1] = (Math.random() - 0.5) * 640;
+      riserArr[i * 3 + 2] = (Math.random() - 0.5) * 220;
+      riserSpd[i] = 0.35 + Math.random() * 0.75;
+    }
+    riserGeo.setAttribute('position', new THREE.BufferAttribute(riserArr, 3));
+    const risers = new THREE.Points(riserGeo, new THREE.PointsMaterial({
+      color: 0x8a99ae, size: 1.2, sizeAttenuation: true,
+      transparent: true, opacity: 0.32, depthWrite: false
+    }));
+    risers.frustumCulled = false;
+    scene.add(risers);
+
+    // Shockwave ring: single expanding ring fired on verdicts.
+    const shockMat = new THREE.MeshBasicMaterial({
+      color: 0xc95a4f, transparent: true, opacity: 0,
+      side: THREE.DoubleSide, depthWrite: false
+    });
+    const shock = new THREE.Mesh(new THREE.RingGeometry(146, 150, 96), shockMat);
+    shock.position.y = 52;
+    shock.visible = false;
+    scene.add(shock);
+
     function size() {
       const r = stage.getBoundingClientRect();
       const w = Math.max(1, Math.round(r.width));
@@ -163,10 +226,21 @@ export function initHeroStage(_canvas) {
       if (reduce || !anime) return;
       try {
         outerMat.color.set(color);
+        shockMat.color.set(color);
+        shock.visible = true;
         anime({
-          targets: globe.scale, x: [1, 1.06, 1], y: [1, 1.06, 1], z: [1, 1.06, 1],
+          targets: globe.scale, x: [1, 1.04, 1], y: [1, 1.04, 1], z: [1, 1.04, 1],
           easing: 'easeOutExpo', duration: 900,
           complete: function () { outerMat.color.set(0x8a99ae); }
+        });
+        anime({
+          targets: shock.scale, x: [0.55, 2.1], y: [0.55, 2.1], z: [1, 1],
+          easing: 'easeOutExpo', duration: 950
+        });
+        anime({
+          targets: shockMat, opacity: [0.55, 0],
+          easing: 'easeOutExpo', duration: 950,
+          complete: function () { shock.visible = false; }
         });
       } catch (e) { /* decorative only */ }
     };
@@ -178,6 +252,13 @@ export function initHeroStage(_canvas) {
     (function frame() {
       if (!visible || document.hidden) return;
       globe.rotation.y += 0.0016;
+      ringGroup.rotation.z -= 0.0011;
+      const rp = riserGeo.attributes.position.array;
+      for (let k = 0; k < RISERS; k++) {
+        rp[k * 3 + 1] += riserSpd[k];
+        if (rp[k * 3 + 1] > 330) rp[k * 3 + 1] = -330;
+      }
+      riserGeo.attributes.position.needsUpdate = true;
       mx += (tx - mx) * 0.03;
       my += (ty - my) * 0.03;
       globe.rotation.x = my * 0.18;

@@ -136,4 +136,67 @@ export function initMotion() {
     if (!b) return;
     setTimeout(function () { burst(b); }, 60);
   });
+
+  // ---------- Live threat ticker (real engine feed) ----------
+  (function initTicker() {
+    const box = document.getElementById('threatTicker');
+    const track = document.getElementById('tickerTrack');
+    if (!box || !track) return;
+    const esc = function (s) {
+      return String(s).replace(/[&<>"']/g, function (ch) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+      });
+    };
+    fetch('/api/v1/threats').then(function (r) {
+      if (!r.ok) throw new Error('feed');
+      return r.json();
+    }).then(function (list) {
+      if (!Array.isArray(list) || !list.length) return;
+      const half = list.slice(0, 10).map(function (e) {
+        const sev = String(e.severity || 'low').toLowerCase();
+        const tag = sev === 'high' ? 'BLOCKED' : sev === 'medium' ? 'FLAGGED' : 'SAFE';
+        const col = sev === 'high' ? '#c95a4f' : sev === 'medium' ? '#c89a4a' : '#5fa37a';
+        return '<span class="ticker__item"><b style="color:' + col + '">' + tag + '</b>' +
+          '<span>' + esc(e.threat_type || 'Event') + '</span>' +
+          '<span class="ticker__sep">//</span><span>' + esc(e.source || '') + '</span></span>';
+      }).join('<span class="ticker__gap">//</span>');
+      track.innerHTML = half + '<span class="ticker__gap">//</span>' + half + '<span class="ticker__gap">//</span>';
+      box.hidden = false;
+    }).catch(function () { /* ticker stays hidden offline: no fake feed */ });
+  })();
+
+  // ---------- Cursor spotlight for cards and panels ----------
+  try {
+    if (!reduce && finePointer) {
+      document.addEventListener('pointermove', function (e) {
+        const card = e.target && e.target.closest
+          ? e.target.closest('.cap,.plan,.stat,.panel,.terminal,.dashboard-card')
+          : null;
+        if (!card) return;
+        if (!card.classList.contains('spot')) card.classList.add('spot');
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left).toFixed(1) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top).toFixed(1) + 'px');
+      }, { passive: true });
+    }
+  } catch (e) { /* spotlight is optional */ }
+
+  // ---------- Scroll progress bar ----------
+  try {
+    const bar = document.createElement('div');
+    bar.id = 'mx-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+    let queued = false;
+    const update = function () {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      bar.style.transform = 'scaleX(' + (max > 0 ? (h.scrollTop / max).toFixed(4) : 0) + ')';
+      queued = false;
+    };
+    document.addEventListener('scroll', function () {
+      if (!queued) { queued = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  } catch (e) { /* progress bar is optional */ }
 }

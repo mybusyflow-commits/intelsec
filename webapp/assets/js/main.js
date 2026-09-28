@@ -2,16 +2,17 @@
    main.js: orchestrator (no custom cursor, no particle spam)
    ========================================================= */
 
-import { initField } from './bg-field.js?v=9';
-import { initBg3D } from './bg-3d.js?v=9';
-import { initHeroStage } from './hero-stage.js?v=9';
-import { initPlatform } from './platform.js?v=9';
-import { initHowStage } from './how-stage.js?v=9';
-import { initScanner } from './scanner.js?v=9';
-import { initPricing } from './pricing.js?v=9';
-import { initModals } from './modals.js?v=9';
-import { initDashboard } from './dashboard.js?v=9';
-import { initMotion } from './motion.js?v=9';
+import { initField } from './bg-field.js?v=12';
+import { initBg3D } from './bg-3d.js?v=12';
+import { initHeroStage } from './hero-stage.js?v=12';
+import { initPlatform } from './platform.js?v=12';
+import { initHowStage } from './how-stage.js?v=12';
+import { initScanner } from './scanner.js?v=12';
+import { initPricing } from './pricing.js?v=12';
+import { initModals } from './modals.js?v=12';
+import { initDashboard } from './dashboard.js?v=12';
+import { initMotion } from './motion.js?v=12';
+import { initLiquidCta } from './liquid-cta.js?v=12';
 
 // Live reduced-motion gate. The OS setting can be toggled without a
 // reload, so we listen for changes and re-evaluate. (per the
@@ -128,6 +129,47 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---------- Kinetic headline: characters cascade in ----------
+  try {
+    if (window.anime && window.gsap && !prefersReducedMotion()) {
+      const splitChars = function (el) {
+        const out = [];
+        Array.from(el.childNodes).forEach(function (node) {
+          if (node.nodeType === 3) {
+            const frag = document.createDocumentFragment();
+            Array.from(node.textContent).forEach(function (ch) {
+              const s = document.createElement('span');
+              s.className = 'mx-ch';
+              s.textContent = ch;
+              frag.appendChild(s);
+              out.push(s);
+            });
+            el.replaceChild(frag, node);
+          } else if (node.nodeType === 1) {
+            Array.prototype.push.apply(out, splitChars(node));
+          }
+        });
+        return out;
+      };
+      let chars = [];
+      document.querySelectorAll('.hero__title .row > span').forEach(function (row) {
+        chars = chars.concat(splitChars(row));
+      });
+      chars.forEach(function (ch) { ch.style.opacity = '0'; });
+      window.anime({
+        targets: chars,
+        opacity: [0, 1],
+        translateY: [12, 0],
+        easing: 'easeOutExpo',
+        duration: 550,
+        delay: window.anime.stagger(16, { start: 550 }),
+        complete: function () {
+          chars.forEach(function (ch) { ch.style.opacity = ''; ch.style.transform = ''; });
+        }
+      });
+    }
+  } catch (e) { /* headline keeps its GSAP reveal */ }
+
 
   // ---------- Hero entrance (anime.js timeline, GPU-only) ----------
   try {
@@ -149,6 +191,61 @@ window.addEventListener('DOMContentLoaded', () => {
   initModals();
   initDashboard();
   initMotion();
+  initLiquidCta();
+
+  // ---------- Hero word morph (text-morph, native) ----------
+  // Rotates the emphasized word through real threat nouns on a slow
+  // timer. Skipped under reduced motion; pauses offscreen.
+  try {
+    const em = document.querySelector('.hero__title em');
+    if (em && !prefersReducedMotion()) {
+      const words = ['threats', 'attacks', 'risks'];
+      let wi = 0;
+      let visible = true;
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          visible = entries[0].isIntersecting;
+        }).observe(em);
+      }
+      setInterval(function () {
+        if (!visible || document.hidden || prefersReducedMotion()) return;
+        wi = (wi + 1) % words.length;
+        const span = document.createElement('span');
+        span.className = 'mx-word is-out';
+        span.textContent = em.textContent;
+        em.textContent = '';
+        em.appendChild(span);
+        setTimeout(function () {
+          span.textContent = words[wi];
+          span.classList.remove('is-out');
+          span.classList.add('is-in');
+          setTimeout(function () {
+            // Flatten back to plain text so the DOM never nests spans.
+            em.textContent = words[wi];
+          }, 450);
+        }, 270);
+      }, 3400);
+    }
+  } catch (e) { /* headline stays static */ }
+
+  // ---------- Press ripple on CTAs (delegated, tactile feedback) ----------
+  document.addEventListener('pointerdown', function (e) {
+    if (prefersReducedMotion()) return;
+    const b = e.target && e.target.closest ? e.target.closest('.btn') : null;
+    if (!b) return;
+    try {
+      const r = b.getBoundingClientRect();
+      const d = Math.max(r.width, r.height) * 2.1;
+      const s = document.createElement('span');
+      s.className = 'mx-ripple';
+      s.style.width = d + 'px';
+      s.style.height = d + 'px';
+      s.style.left = (e.clientX - r.left - d / 2) + 'px';
+      s.style.top = (e.clientY - r.top - d / 2) + 'px';
+      b.appendChild(s);
+      setTimeout(function () { s.remove(); }, 600);
+    } catch (err) { /* decorative only */ }
+  });
 
   // ---------- Active nav highlight ----------
   const sections = $$('section[data-section]');
